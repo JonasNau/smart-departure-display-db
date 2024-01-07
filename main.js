@@ -70,7 +70,10 @@ class DepartureTable {
   async takeFirstResultByGeolocation() {
     return new Promise(async (resolve, reject) => {
       let geoLocation = await Utils.getCurrentPosition();
-      if (!geoLocation) resolve("No geolocation found");
+      if (!geoLocation) {
+        resolve("No geolocation found"); 
+        return
+      }
       let stations = await this.getStationsByLocation(
         geoLocation.coords.latitude,
         geoLocation.coords.longitude
@@ -191,7 +194,7 @@ class DepartureTable {
       second: "numeric",
     })}`;
 
-    let nextDepartures = await this.getNextDepartures(
+    let departureResponse = await this.getNextDepartures(
       this.stationID,
       maxResults.value
     );
@@ -200,25 +203,25 @@ class DepartureTable {
       departuresList.innerHTML = feedback;
     };
     console.log(
-      `Next departures for station ${stationName} (${this.stationID})`,
-      { nextDepartures }
+      `Next departures for station '${this.stationName}' (id: ${this.stationID})`,
+      { nextDepartures: departureResponse }
     );
-    if (!nextDepartures || !nextDepartures.length) {
+    if (!departureResponse || !departureResponse?.departures.length) {
       setNoDeparturesFeedback(
-        `<tr><td colspan='3'><h3 class='d-block text-centered mt-4'>Keine nächsten Abfahrten"</h3></td></tr>`
+        `<tr><td colspan='3'><h3 class='d-block text-centered mt-4'>Keine nächsten Abfahrten gefunden</h3></td></tr>`
       );
       return false;
     }
 
-    for (const leavingVehicle of nextDepartures) {
+    for (const leavingVehicle of departureResponse.departures) {
       let item = document.createElement("tr");
 
       //Show with delay
       if (showDelay.checked) {
         if (leavingVehicle.delay) {
           let Planned_departure = new Date(leavingVehicle.plannedWhen);
-          let delay = leavingVehicle.delay;
-
+          let delay = leavingVehicle.delay ?? 60;
+          
           let departure_with_Delay = new Date(
             leavingVehicle.when
           ); //Add delay in milliseconds to new departure
@@ -352,7 +355,7 @@ class DepartureTable {
     return new Promise(async (resolve, reject) => {
       let results = await Utils.fetchData(
         DB_API_URL +
-          `/stops/nearby?&latitude=${lat}&longitude=${long}&language=${LANG}`
+          `/locations/nearby?&latitude=${lat}&longitude=${long}&language=${LANG}`
       );
       resolve(results);
     });
@@ -424,7 +427,7 @@ let startSearch = async (stationName) => {
 };
 
 //Constants
-const DB_API_URL = "https://v5.db.transport.rest";
+const DB_API_URL = "https://v6.db.transport.rest";
 const LANG = "de";
 const UPDATE_INTERVAL = 30;
 const stationName = document.querySelector("#stationName");
