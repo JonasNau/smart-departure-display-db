@@ -88,16 +88,7 @@ class DepartureTable {
     });
   }
 
-  async getStationData(id, name) {
-    let stationData = await Utils.fetchData(DB_API_URL + `/stations/${id}`);
-    if (stationData) return stationData;
-    if (!name) return false;
 
-    stationData = await this.getStationsByName(name);
-    if (!stationData) return false;
-
-    return stationData[0];
-  }
 
   async setStation(id, name) {
     //Set new stationID and stationName
@@ -109,9 +100,7 @@ class DepartureTable {
     //Set input and stationName
     stationInput.value = name;
     stationName.innerHTML = name;
-    //request stationData by id
-    this.stationData = await this.getStationData(id, name);
-    console.log(`Station data for ${name}:`, this.stationData);
+    console.log(`Station data for ${name}:`);
   }
 
   async getStationsByName(name) {
